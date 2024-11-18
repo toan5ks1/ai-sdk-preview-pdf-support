@@ -39,7 +39,7 @@ export default function ChatWithFiles() {
     api: "/api/generate-quiz",
     schema: questionsSchema,
     initialValue: undefined,
-    onError: (error) => {
+    onError: () => {
       toast.error("Failed to generate quiz. Please try again.");
       setFiles([]);
     },
