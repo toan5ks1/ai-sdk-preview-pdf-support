@@ -54,7 +54,7 @@ async function getKasadaMetadata(request: NextRequest): Promise<{
 
   const headers = new Headers(request.headers);
   headers.delete('x-forwarded-host');
-  headers.set('Host', 'chat.vercel.ai');
+  headers.set('Host', 'ai-sdk-preview-pdf-support.vercel.app');
 
   const headersArray = [...headers.entries()].map(([key, value]) => ({
     key,
