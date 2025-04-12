@@ -22,9 +22,16 @@ interface ResumeInputProps {
   jd: string;
 }
 
+interface ResumeFile {
+  file: File;
+  status: "idle" | "processing" | "success" | "error";
+  message?: string;
+}
+
 export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<ResumeFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -45,7 +52,12 @@ export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
       toast.error("Only PDF files under 5MB are allowed.");
     }
 
-    setFiles(validFiles);
+    const updated: ResumeFile[] = validFiles.map((file) => ({
+      file,
+      status: "idle",
+    }));
+
+    setFiles(updated);
   };
 
   // const encodeFileAsBase64 = (file: File): Promise<string> => {
@@ -58,23 +70,22 @@ export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
   // };
   const handleSubmitWithFiles = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const encodedFiles = await Promise.all(
-      files.map(async (file) => ({
-        name: file.name,
-        type: file.type,
-        data: URL.createObjectURL(file),
-      }))
-    );
-    // setTitle(encodedFiles[0].name);
+    setIsSubmitting(true);
 
-    const textItems = await readPdf(encodedFiles[0].data);
-    const rawText = textItemsToText(textItems);
-    submit({ jd, cv: rawText });
+    await Promise.all(
+      files.map(async (item) => {
+        const dataUrl = URL.createObjectURL(item.file);
+        const textItems = await readPdf(dataUrl);
+        const rawText = textItemsToText(textItems);
+        submit({ jd, cv: rawText });
+        return item.file.name;
+      })
+    );
+    setIsSubmitting(false);
   };
 
   const clearPDF = () => {
     setFiles([]);
-    // setResume(undefined);
   };
 
   const progress = isLoading ? 50 : 100;
@@ -146,27 +157,35 @@ export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
             >
               <input
                 type="file"
+                multiple
                 onChange={handleFileChange}
                 accept="application/pdf"
                 className="absolute inset-0 opacity-0 cursor-pointer"
               />
               <FileUp className="h-8 w-8 mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground text-center">
+              <div className="text-sm text-muted-foreground text-center">
                 {files.length > 0 ? (
-                  <span className="font-medium text-foreground">
-                    {files[0].name}
-                  </span>
+                  files.map((file) => {
+                    return (
+                      <p
+                        key={file.file.name}
+                        className="font-medium text-foreground"
+                      >
+                        {file.file.name}
+                      </p>
+                    );
+                  })
                 ) : (
                   <span>Drop your PDF here or click to browse.</span>
                 )}
-              </p>
+              </div>
             </div>
             <Button
               type="submit"
               className="w-full"
-              disabled={files.length === 0 || isLoading}
+              disabled={files.length === 0 || isSubmitting}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <span className="flex items-center space-x-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Parsing Resume...</span>
@@ -177,7 +196,7 @@ export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
             </Button>
           </form>
         </CardContent>
-        {isLoading && (
+        {isSubmitting && (
           <CardFooter className="flex flex-col space-y-4">
             <div className="w-full space-y-1">
               <div className="flex justify-between text-sm text-muted-foreground">
@@ -190,11 +209,11 @@ export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
               <div className="grid grid-cols-6 sm:grid-cols-4 items-center space-x-2 text-sm">
                 <div
                   className={`h-2 w-2 rounded-full ${
-                    isLoading ? "bg-yellow-500/50 animate-pulse" : "bg-muted"
+                    isSubmitting ? "bg-yellow-500/50 animate-pulse" : "bg-muted"
                   }`}
                 />
                 <span className="text-muted-foreground text-center col-span-4 sm:col-span-2">
-                  {isLoading
+                  {isSubmitting
                     ? `Generating resume ...`
                     : "Analyzing PDF content"}
                 </span>
