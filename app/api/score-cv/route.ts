@@ -1,9 +1,10 @@
 import { resumeScoreSchema } from "@/lib/schemas";
 import { deepseek } from "@ai-sdk/deepseek";
 import { generateObject } from "ai";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { jd, cv } = await req.json();
+  const { jd, cv, fileName } = await req.json();
 
   const result = await generateObject({
     model: deepseek("deepseek-chat"),
@@ -67,5 +68,5 @@ CANDIDATE RESUME:\n${cv}`,
     schema: resumeScoreSchema,
   });
 
-  return result.toJsonResponse();
+  return NextResponse.json({ fileName, data: result.object });
 }

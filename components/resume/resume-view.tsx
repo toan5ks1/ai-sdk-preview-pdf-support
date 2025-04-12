@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-type Props = { title: string; resume: Resume };
+type Props = { title?: string; resume: Resume };
 
 export const ResumePreview: React.FC<Props> = ({ resume, title }) => {
   if (!resume) return null;

@@ -47,24 +47,7 @@ export const textItemsToText = (
   return lines.join("\n");
 };
 
-export const getProgress = (resume: Resume): number => {
-  const fields = [
-    resume.profile,
-    resume.skills,
-    resume.education,
-    resume.workExperience,
-    resume.projects,
-    resume.certifications,
-    resume.languages,
-    resume.contact?.name,
-    resume.contact?.email,
-    resume.contact?.phone,
-    resume.contact?.location,
-    resume.contact?.linkedin,
-  ];
-
-  const filledFields = fields.filter(Boolean).length;
-  const totalFields = fields.length;
-
-  return (filledFields / totalFields) * 100;
-};
+export function capitalizeFirstLetter(str: string): string {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}

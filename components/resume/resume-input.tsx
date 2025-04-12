@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { FileUp, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,29 +9,47 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Link } from "@/components/ui/link";
 import { readPdf } from "@/lib/parse-resume-from-pdf/read-pdf";
-import { getProgress, textItemsToText } from "@/lib/utils";
-import { toast } from "sonner";
+import { textItemsToText } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
+import { experimental_useObject as useObject } from "ai/react";
+import { resumeScoreResultSchema } from "@/lib/schemas";
+import { toast } from "sonner";
+import { ScoreResultStatus } from "@/lib/types";
+import { ResultsList } from "@/app/(preview)/page";
 
 interface ResumeInputProps {
-  isLoading: boolean;
-  submit: (input: any) => void;
   jd: string;
+  setResults: Dispatch<SetStateAction<ResultsList>>;
 }
 
-interface ResumeFile {
-  file: File;
-  status: "idle" | "processing" | "success" | "error";
-  message?: string;
-}
-
-export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
-  const [files, setFiles] = useState<ResumeFile[]>([]);
+export const ResumeInput = ({ jd, setResults }: ResumeInputProps) => {
+  const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { submit, isLoading } = useObject({
+    api: "/api/score-cv",
+    schema: resumeScoreResultSchema,
+    initialValue: undefined,
+    onFinish: ({ object }) => {
+      if (object) {
+        console.log(object);
+        const { fileName, data } = object;
+        setResults((pre) => ({
+          ...pre,
+          [fileName]: {
+            status: "success",
+            data,
+          },
+        }));
+      }
+    },
+    onError: (error) => {
+      toast.error("Failed to score CV. Please try again.");
+    },
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -52,43 +70,39 @@ export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
       toast.error("Only PDF files under 5MB are allowed.");
     }
 
-    const updated: ResumeFile[] = validFiles.map((file) => ({
-      file,
-      status: "idle",
-    }));
-
-    setFiles(updated);
+    setFiles(validFiles);
   };
 
-  // const encodeFileAsBase64 = (file: File): Promise<string> => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.readAsDataURL(file);
-  //     reader.onload = () => resolve(reader.result as string);
-  //     reader.onerror = (error) => reject(error);
-  //   });
-  // };
   const handleSubmitWithFiles = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    await Promise.all(
-      files.map(async (item) => {
-        const dataUrl = URL.createObjectURL(item.file);
-        const textItems = await readPdf(dataUrl);
-        const rawText = textItemsToText(textItems);
-        submit({ jd, cv: rawText });
-        return item.file.name;
-      })
-    );
-    setIsSubmitting(false);
+    const allFiles = {} as ResultsList;
+    files.forEach((file) => {
+      allFiles[file.name] = {
+        status: "idle" as ScoreResultStatus,
+      };
+    });
+
+    setResults(allFiles);
+
+    files.forEach(async (file) => {
+      const dataUrl = URL.createObjectURL(file);
+      const textItems = await readPdf(dataUrl);
+      const rawText = textItemsToText(textItems);
+
+      setResults((pre) => ({
+        ...pre,
+        [file.name]: {
+          status: "processing",
+        },
+      }));
+      submit({ fileName: file.name, jd, cv: rawText });
+    });
   };
 
   const clearPDF = () => {
     setFiles([]);
   };
-
-  const progress = isLoading ? 50 : 100;
 
   return (
     <div
@@ -168,10 +182,10 @@ export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
                   files.map((file) => {
                     return (
                       <p
-                        key={file.file.name}
+                        key={file.name}
                         className="font-medium text-foreground"
                       >
-                        {file.file.name}
+                        {file.name}
                       </p>
                     );
                   })
@@ -183,12 +197,12 @@ export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
             <Button
               type="submit"
               className="w-full"
-              disabled={files.length === 0 || isSubmitting}
+              disabled={files.length === 0 || isLoading}
             >
-              {isSubmitting ? (
+              {isLoading ? (
                 <span className="flex items-center space-x-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Parsing Resume...</span>
+                  <span>Analyzing Resume...</span>
                 </span>
               ) : (
                 "Parse Resume"
@@ -196,31 +210,6 @@ export const ResumeInput = ({ isLoading, submit, jd }: ResumeInputProps) => {
             </Button>
           </form>
         </CardContent>
-        {isSubmitting && (
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="w-full space-y-1">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Progress</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-            <div className="w-full space-y-2">
-              <div className="grid grid-cols-6 sm:grid-cols-4 items-center space-x-2 text-sm">
-                <div
-                  className={`h-2 w-2 rounded-full ${
-                    isSubmitting ? "bg-yellow-500/50 animate-pulse" : "bg-muted"
-                  }`}
-                />
-                <span className="text-muted-foreground text-center col-span-4 sm:col-span-2">
-                  {isSubmitting
-                    ? `Generating resume ...`
-                    : "Analyzing PDF content"}
-                </span>
-              </div>
-            </div>
-          </CardFooter>
-        )}
       </Card>
     </div>
   );

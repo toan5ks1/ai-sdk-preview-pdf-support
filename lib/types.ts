@@ -1,3 +1,4 @@
+import { ScoreResult } from "@/lib/schemas";
 export interface TextItem {
   text: string;
   x: number;
@@ -18,3 +19,10 @@ export interface TextScore {
   match: boolean;
 }
 export type TextScores = TextScore[];
+
+export type ScoreResultStatus = "idle" | "processing" | "success" | "error";
+
+export interface ScoreResultExtended {
+  status: ScoreResultStatus;
+  data?: ScoreResult;
+}

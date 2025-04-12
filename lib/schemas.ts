@@ -110,4 +110,8 @@ export const resumeScoreSchema = z.object({
   score: scoreResultSchema,
 });
 
+export const resumeScoreResultSchema = z.object({
+  fileName: z.string(),
+  data: resumeScoreSchema,
+});
 export type ScoreResult = z.infer<typeof resumeScoreSchema>;
