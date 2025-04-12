@@ -34,7 +34,6 @@ export const ResumeInput = ({ jd, setResults }: ResumeInputProps) => {
     initialValue: undefined,
     onFinish: ({ object }) => {
       if (object) {
-        console.log(object);
         const { fileName, data } = object;
         setResults((pre) => ({
           ...pre,
