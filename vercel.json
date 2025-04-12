@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/score-cv/route.ts": {
+      "maxDuration": 900
+    }
+  }
+}
