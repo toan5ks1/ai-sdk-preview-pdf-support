@@ -6,6 +6,7 @@ import { ResumeInput } from "@/components/resume/resume-input";
 import Footer from "@/components/layout/footer";
 import { ScoreResultExtended } from "@/lib/types";
 import ResumeOverview from "@/components/resume/resume-overview";
+import { cn } from "@/lib/utils";
 
 export interface ResultsList {
   [key: string]: ScoreResultExtended;
@@ -22,7 +23,11 @@ export default function ChatWithFiles() {
         <ResumeInput setResults={setResults} jd={jd} />
       </div>
 
-      <div className="flex flex-col gap-4 flex-1">
+      <div
+        className={cn("flex flex-col gap-4", {
+          "flex-1": Object.keys(results).length > 0,
+        })}
+      >
         {Object.entries(results).map(([key, result]) => {
           return <ResumeOverview key={key} name={key} result={result} />;
         })}
