@@ -12,7 +12,12 @@ import {
 export const ResumeScore = ({ score }: { score: Score }) => {
   return (
     <Card className="rounded-2xl shadow-md">
-      <Accordion collapsible type="single" className="w-full">
+      <Accordion
+        collapsible
+        type="single"
+        className="w-full"
+        defaultValue="score"
+      >
         <AccordionItem value="score" className="border-b-0">
           <AccordionTrigger>
             <CardTitle className="px-4">Score Result</CardTitle>
@@ -55,7 +60,7 @@ export const ResumeScore = ({ score }: { score: Score }) => {
               {score.strengths?.length ? (
                 <div>
                   <strong>Strengths:</strong>
-                  <ul className="list-disc list-inside text-green-600">
+                  <ul className="list-disc list-inside text-green-500">
                     {score.strengths.map((item, i) => (
                       <li key={i}>{item}</li>
                     ))}
@@ -65,7 +70,7 @@ export const ResumeScore = ({ score }: { score: Score }) => {
               {score.weaknesses?.length ? (
                 <div>
                   <strong>Weaknesses:</strong>
-                  <ul className="list-disc list-inside text-red-600">
+                  <ul className="list-disc list-inside text-red-500">
                     {score.weaknesses.map((item, i) => (
                       <li key={i}>{item}</li>
                     ))}

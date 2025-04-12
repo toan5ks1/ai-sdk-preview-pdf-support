@@ -27,7 +27,6 @@ interface ResumeInputProps {
 export const ResumeInput = ({ jd, setResults }: ResumeInputProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  // const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { submit, isLoading } = useObject({
     api: "/api/score-cv",
@@ -138,7 +137,7 @@ export const ResumeInput = ({ jd, setResults }: ResumeInputProps) => {
           </motion.div>
         )}
       </AnimatePresence>
-      <Card className="w-full max-w-md h-full border-0 sm:border sm:h-fit">
+      <Card className="w-full h-full border-0 sm:border sm:h-fit">
         <CardHeader className="text-center space-y-6">
           <div className="mx-auto flex items-center justify-center space-x-2 text-muted-foreground">
             <div className="rounded-full bg-primary/10 p-2">

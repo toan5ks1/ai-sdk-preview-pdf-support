@@ -17,7 +17,12 @@ export const ResumePreview: React.FC<Props> = ({ resume, title }) => {
 
   return (
     <Card className="rounded-2xl shadow-md">
-      <Accordion collapsible type="single" className="w-full">
+      <Accordion
+        collapsible
+        type="single"
+        className="w-full"
+        defaultValue="resume"
+      >
         <AccordionItem value="resume" className="border-b-0">
           <AccordionTrigger>
             <CardTitle className="px-4">Parsed Resume</CardTitle>
