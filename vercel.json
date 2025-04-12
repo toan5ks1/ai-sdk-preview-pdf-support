@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/score-cv": {
+    "/app/api/score-cv/route.*": {
       "maxDuration": 300
     }
   }
